@@ -4,7 +4,13 @@ from contextlib import redirect_stderr, redirect_stdout
 import io
 import unittest
 
-from tinybf import BrainfuckInterpreter, BrainfuckTranspiler, ParseError, SemanticError
+from tinybf import (
+    BrainfuckInterpreter,
+    BrainfuckTranspiler,
+    ParseError,
+    SemanticError,
+)
+from tinybf.bf_interpreter import StepLimitExceeded
 from tinybf.cli import main as cli_main
 
 
@@ -12,18 +18,23 @@ class BrainfuckInterpreterTests(unittest.TestCase):
     def test_simple_output(self) -> None:
         interpreter = BrainfuckInterpreter()
         program = "+" * 65 + "."
-        output = interpreter.run(program)
+        output = interpreter.run(program, max_steps=1000)
         self.assertEqual(output, "A")
 
+    def test_step_limit_exceeded(self) -> None:
+        interpreter = BrainfuckInterpreter()
+        with self.assertRaises(StepLimitExceeded):
+            interpreter.run("+[]", max_steps=10)
 
 class TranspilerIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.interpreter = BrainfuckInterpreter()
         self.transpiler = BrainfuckTranspiler()
+        self.max_steps = 5_000_000
 
     def transpile_and_run(self, source: str) -> str:
         brainfuck = self.transpiler.transpile(source)
-        return self.interpreter.run(brainfuck)
+        return self.interpreter.run(brainfuck, max_steps=self.max_steps)
 
     def test_literal_output(self) -> None:
         source = """
@@ -80,6 +91,35 @@ class TranspilerIntegrationTests(unittest.TestCase):
         output = self.transpile_and_run(source)
         self.assertEqual(output, "B")
 
+    def test_mul_with_variable(self) -> None:
+        source = """
+        let num value = 5
+        let num factor = 4
+        mul value factor
+        print_dec value
+        """
+        output = self.transpile_and_run(source)
+        self.assertEqual(output, "20")
+
+    def test_mul_by_zero_variable(self) -> None:
+        source = """
+        let num value = 5
+        let num factor = 0
+        mul value factor
+        print_dec value
+        """
+        output = self.transpile_and_run(source)
+        self.assertEqual(output, "0")
+
+    def test_mul_self(self) -> None:
+        source = """
+        let num value = 7
+        mul value value
+        print_dec value
+        """
+        output = self.transpile_and_run(source)
+        self.assertEqual(output, "49")
+
     def test_div_with_literal(self) -> None:
         source = """
         let num value = 10
@@ -91,6 +131,26 @@ class TranspilerIntegrationTests(unittest.TestCase):
         """
         output = self.transpile_and_run(source)
         self.assertEqual(output, "3")
+
+    def test_div_with_variable(self) -> None:
+        source = """
+        let num value = 36
+        let num divisor = 6
+        div value divisor
+        print_dec value
+        """
+        output = self.transpile_and_run(source)
+        self.assertEqual(output, "6")
+
+    def test_div_by_zero_variable_sets_zero(self) -> None:
+        source = """
+        let num value = 36
+        let num divisor = 0
+        div value divisor
+        print_dec value
+        """
+        output = self.transpile_and_run(source)
+        self.assertEqual(output, "0")
 
     def test_print_dec_outputs_decimal(self) -> None:
         source = """
@@ -185,13 +245,15 @@ class TranspilerErrorTests(unittest.TestCase):
         with self.assertRaises(ParseError):
             self.transpiler.transpile(program)
 
-    def test_division_by_zero_literal_raises(self) -> None:
-        program = """
+    def test_division_by_zero_literal_sets_zero(self) -> None:
+        source = """
         let num value = 10
         div value 0
+        print_dec value
         """
-        with self.assertRaises(SemanticError):
-            self.transpiler.transpile(program)
+        brainfuck = self.transpiler.transpile(source)
+        output = BrainfuckInterpreter().run(brainfuck, max_steps=100000)
+        self.assertEqual(output, "0")
 
 
 class CLITests(unittest.TestCase):

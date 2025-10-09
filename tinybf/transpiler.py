@@ -367,8 +367,95 @@ class BrainfuckTranspiler:
 
     def _set_cell(self, cell: int, value: int, state: CodeGenState) -> None:
         self._zero_cell(cell, state)
-        if value:
+        if value > 0:
             self._increment_cell(cell, value, state)
+
+    def _is_zero(self, cell: int, flag: int, state: CodeGenState) -> None:
+        temp = self._allocate_cell(state)
+        self._set_cell(flag, 1, state)
+        self._zero_cell(temp, state)
+        self._copy_cell(cell, temp, state)
+        self._move_to(temp, state)
+        state.output.append("[")
+        self._move_to(temp, state)
+        state.output.append("-")
+        self._move_to(flag, state)
+        state.output.append("[-]")
+        self._move_to(temp, state)
+        state.output.append("]")
+        self._zero_cell(temp, state)
+        self._move_to(0, state)
+
+    def _subtract_divisor_if_possible(
+        self,
+        remainder: int,
+        divisor: int,
+        success_flag: int,
+        state: CodeGenState,
+    ) -> None:
+        temp_remainder = self._allocate_cell(state)
+        temp_divisor = self._allocate_cell(state)
+        compare_flag = self._allocate_cell(state)
+        zero_flag = self._allocate_cell(state)
+        should_subtract = self._allocate_cell(state)
+
+        self._zero_cell(success_flag, state)
+        self._zero_cell(temp_remainder, state)
+        self._copy_cell(remainder, temp_remainder, state)
+        self._zero_cell(temp_divisor, state)
+        self._copy_cell(divisor, temp_divisor, state)
+        self._set_cell(compare_flag, 1, state)
+
+        self._move_to(temp_divisor, state)
+        state.output.append("[")
+        self._move_to(temp_divisor, state)
+        state.output.append("-")
+
+        self._zero_cell(should_subtract, state)
+        self._copy_cell(compare_flag, should_subtract, state)
+        self._is_zero(temp_remainder, zero_flag, state)
+        self._move_to(zero_flag, state)
+        state.output.append("[")
+        self._move_to(zero_flag, state)
+        state.output.append("-")
+        self._zero_cell(compare_flag, state)
+        self._zero_cell(should_subtract, state)
+        self._move_to(temp_divisor, state)
+        state.output.append("[-]")
+        self._move_to(zero_flag, state)
+        state.output.append("]")
+        self._zero_cell(zero_flag, state)
+
+        self._move_to(should_subtract, state)
+        state.output.append("[")
+        self._move_to(should_subtract, state)
+        state.output.append("-")
+        self._move_to(temp_remainder, state)
+        state.output.append("-")
+        self._move_to(should_subtract, state)
+        state.output.append("]")
+
+        self._move_to(temp_divisor, state)
+        state.output.append("]")
+
+        self._zero_cell(success_flag, state)
+        self._copy_cell(compare_flag, success_flag, state)
+        self._move_to(compare_flag, state)
+        state.output.append("[")
+        self._move_to(compare_flag, state)
+        state.output.append("-")
+        self._zero_cell(remainder, state)
+        self._copy_cell(temp_remainder, remainder, state)
+        self._set_cell(success_flag, 1, state)
+        self._move_to(compare_flag, state)
+        state.output.append("]")
+
+        self._zero_cell(temp_remainder, state)
+        self._zero_cell(temp_divisor, state)
+        self._zero_cell(compare_flag, state)
+        self._zero_cell(zero_flag, state)
+        self._zero_cell(should_subtract, state)
+        self._move_to(0, state)
 
     def _move_to(self, cell: int, state: CodeGenState) -> None:
         delta = cell - state.pointer
@@ -502,71 +589,96 @@ class BrainfuckTranspiler:
         self._zero_cell(source_copy, state)
         self._move_to(0, state)
 
-    def _divide_literal(self, target_cell: int, literal: int, state: CodeGenState) -> None:
-        if literal <= 0:
-            raise SemanticError("divisor must be a positive literal")
-        value_cell = self._allocate_cell(state)
-        countdown = self._allocate_cell(state)
-        copy_cell = self._allocate_cell(state)
-        detect_cell = self._allocate_cell(state)
+    def _multiply_cell(self, target_cell: int, operand_cell: int, state: CodeGenState) -> None:
+        multiplicand = self._allocate_cell(state)
+        multiplier = self._allocate_cell(state)
 
-        self._zero_cell(value_cell, state)
-        self._copy_cell(target_cell, value_cell, state)
+        self._zero_cell(multiplicand, state)
+        self._copy_cell(target_cell, multiplicand, state)
+        self._zero_cell(multiplier, state)
+        self._copy_cell(operand_cell, multiplier, state)
+
         self._zero_cell(target_cell, state)
 
-        self._zero_cell(countdown, state)
-        self._increment_cell(countdown, literal, state)
-        self._zero_cell(copy_cell, state)
-        self._zero_cell(detect_cell, state)
-
-        self._move_to(value_cell, state)
+        self._move_to(multiplier, state)
         state.output.append("[")
-        self._move_to(value_cell, state)
+        self._move_to(multiplier, state)
         state.output.append("-")
-        self._move_to(countdown, state)
-        state.output.append("-")
+        self._transfer_add(multiplicand, target_cell, state)
+        self._move_to(multiplier, state)
+        state.output.append("]")
 
-        self._zero_cell(copy_cell, state)
-        self._zero_cell(detect_cell, state)
-        self._increment_cell(detect_cell, 1, state)
+        self._zero_cell(multiplier, state)
+        self._zero_cell(multiplicand, state)
+        self._move_to(0, state)
 
-        self._move_to(countdown, state)
+    def _divide_literal(self, target_cell: int, literal: int, state: CodeGenState) -> None:
+        if literal < 0:
+            raise SemanticError("divisor must be non-negative")
+        divisor_cell = self._allocate_cell(state)
+        self._set_cell(divisor_cell, literal, state)
+        self._divide_cells(target_cell, divisor_cell, state)
+        self._zero_cell(divisor_cell, state)
+
+    def _divide_cells(self, target_cell: int, divisor_cell: int, state: CodeGenState) -> None:
+        execute_flag = self._allocate_cell(state)
+        self._set_cell(execute_flag, 1, state)
+
+        divisor_zero_flag = self._allocate_cell(state)
+        self._is_zero(divisor_cell, divisor_zero_flag, state)
+        self._move_to(divisor_zero_flag, state)
         state.output.append("[")
-        self._move_to(countdown, state)
+        self._move_to(divisor_zero_flag, state)
         state.output.append("-")
-        self._move_to(copy_cell, state)
-        state.output.append("+")
-        self._move_to(detect_cell, state)
+        self._zero_cell(target_cell, state)
+        self._move_to(execute_flag, state)
         state.output.append("[-]")
-        self._move_to(countdown, state)
+        self._move_to(divisor_zero_flag, state)
         state.output.append("]")
+        self._zero_cell(divisor_zero_flag, state)
 
-        self._move_to(copy_cell, state)
+        remainder_cell = self._allocate_cell(state)
+        success_flag = self._allocate_cell(state)
+        loop_flag = self._allocate_cell(state)
+
+        self._move_to(execute_flag, state)
         state.output.append("[")
-        self._move_to(copy_cell, state)
+        self._move_to(execute_flag, state)
         state.output.append("-")
-        self._move_to(countdown, state)
-        state.output.append("+")
-        self._move_to(copy_cell, state)
-        state.output.append("]")
 
-        self._move_to(detect_cell, state)
+        self._zero_cell(remainder_cell, state)
+        self._copy_cell(target_cell, remainder_cell, state)
+        self._zero_cell(target_cell, state)
+
+        self._set_cell(loop_flag, 1, state)
+        self._move_to(loop_flag, state)
         state.output.append("[")
-        self._move_to(detect_cell, state)
+        self._move_to(loop_flag, state)
+        state.output.append("-")
+        self._subtract_divisor_if_possible(remainder_cell, divisor_cell, success_flag, state)
+        self._move_to(success_flag, state)
+        state.output.append("[")
+        self._move_to(success_flag, state)
         state.output.append("-")
         self._increment_cell(target_cell, 1, state)
-        self._zero_cell(countdown, state)
-        self._increment_cell(countdown, literal, state)
-        self._move_to(detect_cell, state)
+        self._move_to(loop_flag, state)
+        state.output.append("+")
+        self._move_to(success_flag, state)
+        state.output.append("]")
+        self._move_to(success_flag, state)
+        state.output.append("[-]")
+        self._move_to(loop_flag, state)
         state.output.append("]")
 
-        self._move_to(value_cell, state)
+        self._zero_cell(loop_flag, state)
+        self._zero_cell(remainder_cell, state)
+        self._zero_cell(success_flag, state)
+        self._move_to(execute_flag, state)
+        state.output.append("[-]")
+        self._move_to(execute_flag, state)
         state.output.append("]")
 
-        self._zero_cell(value_cell, state)
-        self._zero_cell(countdown, state)
-        self._zero_cell(copy_cell, state)
-        self._zero_cell(detect_cell, state)
+        self._zero_cell(execute_flag, state)
         self._move_to(0, state)
 
     def _copy_cell(self, source: int, target: int, state: CodeGenState) -> None:
@@ -668,7 +780,12 @@ class BrainfuckTranspiler:
             elif isinstance(stmt.expr, CharLiteral):
                 self._multiply_literal(cell, stmt.expr.value, state)
             else:
-                raise SemanticError("mul currently supports literal operands only")
+                operand_cell, operand_type = self._get_var(stmt.expr.name, state) if isinstance(stmt.expr, Identifier) else (None, None)
+                if operand_cell is None:
+                    raise SemanticError("mul operand must be a literal or variable")
+                if operand_type not in (VarType.NUM, VarType.CHAR):
+                    raise SemanticError("mul operand must be numeric or char")
+                self._multiply_cell(cell, operand_cell, state)
         elif isinstance(stmt, Div):
             cell, var_type = self._get_var(stmt.name, state)
             if var_type != VarType.NUM:
@@ -678,7 +795,12 @@ class BrainfuckTranspiler:
             elif isinstance(stmt.expr, CharLiteral):
                 self._divide_literal(cell, stmt.expr.value, state)
             else:
-                raise SemanticError("div currently supports literal operands only")
+                if not isinstance(stmt.expr, Identifier):
+                    raise SemanticError("div operand must be a literal or variable")
+                operand_cell, operand_type = self._get_var(stmt.expr.name, state)
+                if operand_type not in (VarType.NUM, VarType.CHAR):
+                    raise SemanticError("div operand must be numeric or char")
+                self._divide_cells(cell, operand_cell, state)
         elif isinstance(stmt, PrintChar):
             cell, var_type = self._get_var(stmt.name, state)
             if var_type != VarType.CHAR:

@@ -46,10 +46,10 @@ Evaluates `expr` into the target variable. Assignments support implicit conversi
 ```
 add IDENT expr
 sub IDENT expr
-mul IDENT literal
+mul IDENT operand
 div IDENT literal
 ```
-`expr` in `add`/`sub` can be a literal or identifier of type `num` or `char`. `mul` supports multiplication by a literal (numeric or character) and updates the target in-place. `div` performs integer division by a positive literal and stores the quotient in the target. The target for `mul`/`div` must be numeric (`num`), while `mul` also accepts `char` targets. All operations use wrap-around semantics modulo 256.
+`expr` in `add`/`sub` can be a literal or identifier of type `num` or `char`. `mul` accepts either a literal or identifier (types `num`/`char`) and multiplies the target in-place. `div` performs integer division by a literal or identifier (types `num`/`char`) and stores the quotient in the target; dividing by zero yields zero without raising an error. The target for `mul`/`div` must be numeric (`num`), while `mul` also accepts `char` targets. All operations use wrap-around semantics modulo 256.
 
 ### I/O
 ```

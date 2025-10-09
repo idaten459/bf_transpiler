@@ -4,6 +4,10 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Iterable, Optional
 
 
+class StepLimitExceeded(RuntimeError):
+    """Raised when Brainfuck execution exceeds the configured step budget."""
+
+
 @dataclass
 class BrainfuckInterpreter:
     tape_length: int = 30000
@@ -23,14 +27,22 @@ class BrainfuckInterpreter:
         self.pointer = 0
         self.output_buffer = []
 
-    def run(self, code: str, input_data: Optional[Iterable[int]] = None) -> str:
+    def run(
+        self,
+        code: str,
+        input_data: Optional[Iterable[int]] = None,
+        max_steps: Optional[int] = None,
+    ) -> str:
         self.reset()
         input_iter = iter(input_data or [])
         code_chars = list(code)
         jump_map = self._build_jump_map(code_chars)
         pc = 0
+        steps = 0
 
         while pc < len(code_chars):
+            if max_steps is not None and steps >= max_steps:
+                raise StepLimitExceeded("Brainfuck program exceeded allowed step count")
             command = code_chars[pc]
             if command == ">":
                 self.pointer += 1
@@ -59,6 +71,7 @@ class BrainfuckInterpreter:
                     pc = jump_map[pc]
             # Ignore any non-command characters (e.g., comments)
             pc += 1
+            steps += 1
 
         return "".join(self.output_buffer)
 
@@ -79,4 +92,4 @@ class BrainfuckInterpreter:
         return jump_map
 
 
-__all__ = ["BrainfuckInterpreter"]
+__all__ = ["BrainfuckInterpreter", "StepLimitExceeded"]

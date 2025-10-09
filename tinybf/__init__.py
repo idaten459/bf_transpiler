@@ -1,4 +1,4 @@
-from .bf_interpreter import BrainfuckInterpreter
+from .bf_interpreter import BrainfuckInterpreter, StepLimitExceeded
 from .transpiler import BrainfuckTranspiler, ParseError, SemanticError, VarType
 
 __all__ = [
@@ -7,4 +7,5 @@ __all__ = [
     "ParseError",
     "SemanticError",
     "VarType",
+    "StepLimitExceeded",
 ]
