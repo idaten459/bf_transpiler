@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Iterable, Optional
 
-from .bf_interpreter import BrainfuckInterpreter
+from .bf_interpreter import BrainfuckInterpreter, StepLimitExceeded
 from .transpiler import BrainfuckTranspiler, ParseError, SemanticError
 
 
@@ -43,6 +43,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         help="Optional input string supplied to the Brainfuck program when running",
         default="",
     )
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        help="Maximum steps to execute when running (default: no limit)",
+        default=None,
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -67,7 +73,15 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     if args.run:
         interpreter = BrainfuckInterpreter()
-        output = interpreter.run(brainfuck_code, input_data=_to_input_bytes(args.input))
+        try:
+            output = interpreter.run(
+                brainfuck_code,
+                input_data=_to_input_bytes(args.input),
+                max_steps=args.max_steps,
+            )
+        except StepLimitExceeded as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
         sys.stdout.write(output)
 
     return 0

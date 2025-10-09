@@ -132,3 +132,12 @@ python -m tinybf path/to/program.tbf --run --input "data"
 ```
 
 `--run` executes the generated Brainfuck using the bundled interpreter and writes the program output to STDOUT.
+
+## Visualizer
+For step-by-step inspection of generated Brainfuck, use the interactive visualizer:
+
+```
+python -m tinybf.visualizer path/to/program.tbf
+```
+
+See `docs/visualizer.md` for detailed usage and available REPL commands.

@@ -1,5 +1,6 @@
-from .bf_interpreter import BrainfuckInterpreter, StepLimitExceeded
+from .bf_interpreter import BrainfuckInterpreter, ExecutionState, StepLimitExceeded
 from .transpiler import BrainfuckTranspiler, ParseError, SemanticError, VarType
+from .visualizer import VisualizerSession
 
 __all__ = [
     "BrainfuckInterpreter",
@@ -7,5 +8,7 @@ __all__ = [
     "ParseError",
     "SemanticError",
     "VarType",
+    "ExecutionState",
     "StepLimitExceeded",
+    "VisualizerSession",
 ]

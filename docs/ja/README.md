@@ -82,6 +82,15 @@ python -m tinybf path/to/program.tbf --run --input "abc"  # 標準入力へ文�
 
 `--emit` が指定されない場合は Brainfuck コードを標準出力に出力します。`--run` を付けると内部のインタープリタで即時実行し、プログラムの出力を標準出力に書き込みます。
 
+## ビジュアライザ
+Brainfuck の状態を 1 ステップずつ確認したい場合は、ビジュアライザを利用できます。
+
+```
+python -m tinybf.visualizer path/to/program.tbf
+```
+
+詳しい使い方は `docs/ja/visualizer.md` を参照してください。
+
 ## テスト
 ```
 python -m unittest discover -s tests -v
