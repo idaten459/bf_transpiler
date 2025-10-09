@@ -1,0 +1,36 @@
+# TinyBF 競技プログラミング例: 1 桁の整数 A, B (0-4) を入力し A+B を出力
+# 入力形式: "A\nB\n" (それぞれ ASCII 数字と改行)
+# 出力形式: (A+B) を 1 桁の ASCII 数字で出力し、改行を付与
+
+let char ascii_zero = '0'
+let char newline = '\\n'
+let char temp = '\\0'
+let num a = 0
+let num b = 0
+let num sum = 0
+let char result = '\\0'
+
+# 1つ目の数字を読み取って 0-9 の値に変換
+input_char temp
+set a = temp
+sub a ascii_zero
+
+# 改行を読み捨て
+input_char temp
+
+# 2つ目の数字を読み取って 0-9 の値に変換
+input_char temp
+set b = temp
+sub b ascii_zero
+
+# 合計を計算 (A+B)
+set sum = a
+add sum b
+
+# ASCII 数字に戻して出力
+set result = sum
+add result ascii_zero
+print_char result
+
+# 改行を付与
+print_char newline
