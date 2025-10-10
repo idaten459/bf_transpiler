@@ -26,6 +26,37 @@ class BrainfuckInterpreterTests(unittest.TestCase):
         with self.assertRaises(StepLimitExceeded):
             interpreter.run("+[]", max_steps=10)
 
+
+class OptimizerTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.transpiler = BrainfuckTranspiler()
+
+    def test_collapses_duplicate_zero_loop(self) -> None:
+        optimized = self.transpiler._optimize_code("[-][-]")
+        self.assertEqual(optimized, "[-]")
+
+    def test_collapses_duplicate_shift_loop(self) -> None:
+        optimized = self.transpiler._optimize_code("[-<+>][-<+>]")
+        self.assertEqual(optimized, "[-<+>]")
+
+    def test_transpile_avoids_double_zero_clear(self) -> None:
+        code = self.transpiler.transpile("let num value = 0")
+        self.assertNotIn("[-][-]", code)
+
+    def test_scaled_increment_for_large_literal(self) -> None:
+        code = self.transpiler.transpile("let num value = 200")
+        self.assertIn("[->", code)
+        self.assertLess(code.count("+"), 100)
+
+    def test_scaled_decrement_for_large_subtraction(self) -> None:
+        source = """
+        let num value = 50
+        sub value 200
+        """
+        code = self.transpiler.transpile(source)
+        self.assertIn("[->", code)
+
+
 class TranspilerIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.interpreter = BrainfuckInterpreter()

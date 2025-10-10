@@ -340,7 +340,8 @@ class BrainfuckTranspiler:
         for stmt in statements:
             self._emit_statement(stmt, state)
         self._move_to(0, state)
-        return "".join(state.output)
+        code = "".join(state.output)
+        return self._optimize_code(code)
 
     # --- Helpers ---
 
@@ -351,6 +352,114 @@ class BrainfuckTranspiler:
         self._move_to(state.temp_b, state)
         self._zero_current(state)
         self._move_to(0, state)
+
+    def _optimize_code(self, code: str) -> str:
+        optimized: list[str] = []
+        length = len(code)
+        index = 0
+        while index < length:
+            command = code[index]
+            if command in "+-":
+                delta = 0
+                while index < length and code[index] in "+-":
+                    delta += 1 if code[index] == "+" else -1
+                    index += 1
+                if delta > 0:
+                    optimized.append("+" * delta)
+                elif delta < 0:
+                    optimized.append("-" * (-delta))
+                continue
+            if command in "<>":
+                delta = 0
+                while index < length and code[index] in "<>":
+                    delta += 1 if code[index] == ">" else -1
+                    index += 1
+                if delta > 0:
+                    optimized.append(">" * delta)
+                elif delta < 0:
+                    optimized.append("<" * (-delta))
+                continue
+            optimized.append(command)
+            index += 1
+        compacted = "".join(optimized)
+        return self._collapse_clear_loop_runs(compacted)
+
+    def _collapse_clear_loop_runs(self, code: str) -> str:
+        changed = True
+        current = code
+        while changed:
+            current, changed = self._collapse_clear_loop_runs_once(current)
+        return current
+
+    def _collapse_clear_loop_runs_once(self, code: str) -> tuple[str, bool]:
+        bracket_map = self._build_bracket_map(code)
+        if bracket_map is None:
+            return code, False
+
+        result: list[str] = []
+        changed = False
+        index = 0
+        while index < len(code):
+            char = code[index]
+            if char == "[":
+                end = bracket_map.get(index)
+                if end is None:
+                    result.append(char)
+                    index += 1
+                    continue
+                loop_str = code[index : end + 1]
+                body = code[index + 1 : end]
+                if self._is_clear_loop(body):
+                    next_index = end + 1
+                    loop_len = len(loop_str)
+                    while next_index <= len(code) - loop_len and code[next_index : next_index + loop_len] == loop_str:
+                        changed = True
+                        next_index += loop_len
+                    result.append(loop_str)
+                    index = next_index
+                    continue
+                result.append(loop_str)
+                index = end + 1
+                continue
+            result.append(char)
+            index += 1
+        return "".join(result), changed
+
+    def _build_bracket_map(self, code: str) -> Optional[Dict[int, int]]:
+        stack: list[int] = []
+        mapping: Dict[int, int] = {}
+        for pos, char in enumerate(code):
+            if char == "[":
+                stack.append(pos)
+            elif char == "]":
+                if not stack:
+                    return None
+                start = stack.pop()
+                mapping[start] = pos
+        if stack:
+            return None
+        return mapping
+
+    def _is_clear_loop(self, body: str) -> bool:
+        if not body:
+            return False
+        pointer = 0
+        home_decrements = 0
+        home_increments = 0
+        for char in body:
+            if char == ">":
+                pointer += 1
+            elif char == "<":
+                pointer -= 1
+            elif char == "+":
+                if pointer == 0:
+                    home_increments += 1
+            elif char == "-":
+                if pointer == 0:
+                    home_decrements += 1
+            else:
+                return False
+        return pointer == 0 and home_decrements > 0 and home_increments == 0
 
     def _get_scratch_cell(self, state: CodeGenState, *exclude: int) -> int:
         for candidate in (state.temp_a, state.temp_b):
@@ -473,11 +582,63 @@ class BrainfuckTranspiler:
     def _increment_cell(self, cell: int, amount: int, state: CodeGenState) -> None:
         if amount == 0:
             return
+        if amount > 0 and self._try_scaled_increment(cell, amount, state, subtract=False):
+            return
+        if amount < 0 and self._try_scaled_increment(cell, -amount, state, subtract=True):
+            return
+        self._emit_linear_increment(cell, amount, state)
+
+    def _emit_linear_increment(self, cell: int, amount: int, state: CodeGenState) -> None:
+        if amount == 0:
+            return
         self._move_to(cell, state)
         if amount > 0:
             state.output.append("+" * amount)
         else:
             state.output.append("-" * (-amount))
+
+    def _try_scaled_increment(self, cell: int, magnitude: int, state: CodeGenState, *, subtract: bool) -> bool:
+        scratch = self._get_scratch_cell(state, cell)
+        distance = abs(cell - scratch)
+        if distance == 0:
+            return False
+        pattern = self._select_scaled_increment(magnitude, distance)
+        if pattern is None:
+            return False
+        _, loop_count, step, remainder = pattern
+        self._zero_cell(scratch, state)
+        self._emit_linear_increment(scratch, loop_count, state)
+        self._move_to(scratch, state)
+        state.output.append("[")
+        state.output.append("-")
+        self._move_to(cell, state)
+        if step:
+            op = "-" if subtract else "+"
+            state.output.append(op * step)
+        self._move_to(scratch, state)
+        state.output.append("]")
+        self._move_to(cell, state)
+        if remainder:
+            remainder_amount = -remainder if subtract else remainder
+            self._emit_linear_increment(cell, remainder_amount, state)
+        return True
+
+    def _select_scaled_increment(self, magnitude: int, distance: int) -> Optional[tuple[int, int, int, int]]:
+        if magnitude <= 0:
+            return None
+        best: Optional[tuple[int, int, int, int]] = None
+        max_loops = min(16, magnitude)
+        for loop_count in range(2, max_loops + 1):
+            step = magnitude // loop_count
+            if step == 0:
+                break
+            remainder = magnitude - loop_count * step
+            cost = loop_count + step + remainder + 4 * distance + 5
+            if best is None or cost < best[0]:
+                best = (cost, loop_count, step, remainder)
+        if best is None or best[0] >= magnitude:
+            return None
+        return best
 
     def _ensure_cell(self, name: str, var_type: VarType, state: CodeGenState) -> int:
         if name in state.cell_map:
