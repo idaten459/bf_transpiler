@@ -103,6 +103,24 @@ python -m tinybf.visualizer path/to/program.tbf
 
 詳しい使い方は `docs/ja/visualizer.md` を参照してください。
 
+## Web UI（実験的）
+ブラウザから Brainfuck の実行状態を閲覧・手動ステップ実行したい場合は、Web UI を起動します。
+
+```
+python -m tinybf.webui --host 127.0.0.1 --port 8000
+```
+
+起動後に `http://127.0.0.1:8000/` へアクセスすると、以下の操作が可能です。
+
+- 左ペインのテキストエリアへ TinyBF もしくは Brainfuck コードを貼り付けて「Create Session」でセッション生成
+- 「Step」で指定ステップ数だけ実行し、テープ・ポインタ・出力の変化を確認
+- 「Reset」で現在のコード・入力を維持したまま状態をリセット
+- 履歴スライダーで過去ステップへスクラブし、テープやポインタの状態を即座に遡及表示
+- ブレークポイントを追加／削除して `Run to Breakpoint` で停止位置を制御
+- TinyBF を選択するとブラウザ側でトランスパイルされ、コンパイル済み Brainfuck が別欄に表示されます
+
+テープの窓幅や入力文字列は画面上で変更できます。ステップ実行に失敗した場合は画面下部のステータスにエラー内容が表示されます。
+
 ## テスト
 ```
 python -m unittest discover -s tests -v

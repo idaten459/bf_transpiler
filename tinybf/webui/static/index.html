@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TinyBF Web UI</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>TinyBF Web UI</h1>
+      <p class="tagline">Manual stepping and quick inspection for Brainfuck programs</p>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Program</h2>
+        </div>
+        <label class="field">
+          <span class="field-label">TinyBF / Brainfuck Code</span>
+          <textarea id="code" rows="10">
+++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.
+          </textarea>
+        </label>
+        <div class="field">
+          <span class="field-label">Language</span>
+          <select id="language">
+            <option value="brainfuck">Brainfuck</option>
+            <option value="tinybf">TinyBF</option>
+          </select>
+        </div>
+        <label class="field" id="compiled-wrapper" hidden>
+          <span class="field-label">Compiled Brainfuck</span>
+          <textarea id="compiled-code" rows="6" readonly></textarea>
+        </label>
+        <div class="field-group">
+          <label class="field">
+            <span class="field-label">Input</span>
+            <input id="input" type="text" placeholder="Optional input" />
+          </label>
+          <label class="field">
+            <span class="field-label">Tape Window</span>
+            <input id="tape-window" type="number" min="1" value="10" />
+          </label>
+          <label class="field">
+            <span class="field-label">Step Count</span>
+            <input id="step-count" type="number" min="1" value="1" />
+          </label>
+        </div>
+        <div class="button-row">
+          <button id="create-session" class="primary">Create Session</button>
+          <button id="step" class="accent">Step</button>
+          <button id="reset">Reset</button>
+        </div>
+        <p id="status" class="status">Ready.</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Execution State</h2>
+        </div>
+        <dl class="state-grid">
+          <div>
+            <dt>Step</dt>
+            <dd id="state-step">-</dd>
+          </div>
+          <div>
+            <dt>Program Counter</dt>
+            <dd id="state-pc">-</dd>
+          </div>
+          <div>
+            <dt>Command</dt>
+            <dd id="state-command">-</dd>
+          </div>
+          <div>
+            <dt>Pointer</dt>
+            <dd id="state-pointer">-</dd>
+          </div>
+          <div>
+            <dt>Output</dt>
+            <dd id="state-output">(empty)</dd>
+          </div>
+          <div>
+            <dt>Finished</dt>
+            <dd id="state-finished">No</dd>
+          </div>
+        </dl>
+        <div class="code-preview">
+          <div class="panel-subheader">
+            <h3>Code Window</h3>
+          </div>
+          <pre id="code-window"></pre>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Tape View</h2>
+        </div>
+        <div id="tape" class="tape"></div>
+        <div class="panel-subheader">
+          <h3>History</h3>
+        </div>
+        <div class="history-controls">
+          <input id="history-range" class="history-range" type="range" min="0" max="0" value="0" />
+          <div id="history-info" class="history-info">Step 0 / 0</div>
+        </div>
+        <div class="panel-subheader">
+          <h3>Breakpoints</h3>
+        </div>
+        <div class="breakpoint-controls">
+          <label class="field breakpoint-input">
+            <span class="field-label">Program Counter</span>
+            <input id="breakpoint-pc" type="number" min="0" value="0" />
+          </label>
+          <div class="breakpoint-buttons">
+            <button id="add-breakpoint">Add Breakpoint</button>
+            <button id="run-to-break" class="accent">Run to Breakpoint</button>
+          </div>
+        </div>
+        <div id="breakpoint-list" class="breakpoint-list"></div>
+      </section>
+    </main>
+
+    <script src="/static/main.js" defer></script>
+  </body>
+</html>
