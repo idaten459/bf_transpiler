@@ -137,16 +137,101 @@ button:hover {
 .history-controls {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+}
+
+.history-actions {
+  display: flex;
   gap: 0.5rem;
 }
 
-.history-range {
+.history-actions button {
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  font-size: 0.85rem;
+}
+
+.history-range-container {
   width: 100%;
+  position: relative;
+  padding: 0.3rem 0;
+}
+
+.history-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.6), rgba(100, 116, 139, 0.25));
+  outline: none;
+  margin: 0;
+  box-sizing: border-box;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.history-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #a5b4fc;
+  border: 2px solid #1f2937;
+  transition: transform 0.15s ease;
+}
+
+.history-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #a5b4fc;
+  border: 2px solid #1f2937;
+  transition: transform 0.15s ease;
+}
+
+.history-range:hover::-webkit-slider-thumb,
+.history-range:focus-visible::-webkit-slider-thumb,
+.history-range:hover::-moz-range-thumb,
+.history-range:focus-visible::-moz-range-thumb {
+  transform: scale(1.1);
 }
 
 .history-info {
   font-size: 0.85rem;
   color: #cbd5f5;
+}
+
+.history-info.preview {
+  color: #facc15;
+}
+
+.history-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.history-chip {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(30, 41, 59, 0.6);
+  color: #e2e8f0;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.history-chip.is-active {
+  border-color: rgba(56, 189, 248, 0.75);
+  background: rgba(56, 189, 248, 0.25);
+}
+
+.history-chip.is-preview {
+  border-color: rgba(250, 204, 21, 0.8);
+  background: rgba(250, 204, 21, 0.2);
 }
 
 .state-grid {
@@ -181,41 +266,78 @@ button:hover {
   border-radius: 10px;
   padding: 0.75rem;
   border: 1px solid rgba(148, 163, 184, 0.15);
+  max-height: 9.5rem;
+  overflow-y: auto;
 }
 
 .code-preview pre {
   margin: 0;
-  white-space: pre-wrap;
   font-family: "Fira Code", Menlo, Consolas, monospace;
   font-size: 0.9rem;
   color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  user-select: none;
 }
 
-.code-preview mark {
-  background: rgba(59, 130, 246, 0.35);
+.code-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.02rem;
+}
+
+.code-token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.75rem;
+  padding: 0.15rem 0.15rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.code-token:hover {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+.code-token.is-current {
+  background: rgba(59, 130, 246, 0.5);
   color: #f8fafc;
-  border-radius: 4px;
-  padding: 0 2px;
 }
 
-.code-preview .breakpoint {
-  border-bottom: 2px dashed rgba(248, 113, 113, 0.7);
+.code-token.has-breakpoint {
+  box-shadow: inset 0 -2px 0 rgba(248, 113, 113, 0.8);
+}
+
+.code-token.has-breakpoint::before {
+  content: "●";
+  font-size: 0.6rem;
+  color: #f87171;
+  margin-right: 0.25rem;
+}
+
+.code-token.is-current.has-breakpoint::before {
+  color: #fee2e2;
 }
 
 .tape {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(70px, 1fr));
+  grid-auto-rows: auto;
+  gap: 0.4rem;
 }
 
 .tape-cell {
-  min-width: 64px;
+  min-width: 70px;
   background: rgba(30, 41, 59, 0.7);
   border: 1px solid rgba(148, 163, 184, 0.15);
   border-radius: 10px;
   padding: 0.6rem;
   text-align: center;
   font-family: "Fira Code", Menlo, Consolas, monospace;
+  flex: 0 0 auto;
 }
 
 .tape-cell .cell-index {
@@ -231,18 +353,19 @@ button:hover {
 
 .breakpoint-controls {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: flex-start;
   gap: 0.75rem;
-  align-items: flex-end;
 }
 
-.breakpoint-input {
-  flex: 1 1 150px;
-}
-
-.breakpoint-buttons {
+.breakpoint-header {
   display: flex;
+  align-items: baseline;
   gap: 0.75rem;
+}
+
+.breakpoint-hint {
+  font-size: 0.8rem;
+  color: #94a3b8;
 }
 
 .breakpoint-list {

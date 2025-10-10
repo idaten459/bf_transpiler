@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, validator
 
-from tinybf.bf_interpreter import ExecutionState, StepLimitExceeded
+from tinybf.bf_interpreter import BrainfuckInterpreter, ExecutionState, StepLimitExceeded
 from tinybf.visualizer import VisualizerSession
 from tinybf.transpiler import BrainfuckTranspiler, ParseError, SemanticError
 
@@ -30,6 +30,22 @@ def _state_to_dict(state: ExecutionState) -> dict:
         "output": state.output,
         "code_length": state.code_length,
     }
+
+
+def _calculate_total_steps(code: str, input_template: List[int], cap: int = 10000) -> tuple[int, bool]:
+    interpreter = BrainfuckInterpreter()
+    total = 0
+    try:
+        for state in interpreter.step(
+            code,
+            input_data=list(input_template),
+            max_steps=cap,
+        ):
+            if state.step > total:
+                total = state.step
+    except StepLimitExceeded:
+        return cap, True
+    return total, total >= cap
 
 
 class SessionConfiguration(BaseModel):
@@ -77,6 +93,8 @@ class SessionPayload(BaseModel):
     history_size: int
     breakpoints: List[int]
     hit_breakpoint: Optional[int]
+    total_steps: int
+    total_steps_capped: bool
 
 
 class StepRequest(BaseModel):
@@ -93,10 +111,13 @@ class StepResponse(BaseModel):
     history_size: int
     breakpoints: List[int]
     hit_breakpoint: Optional[int]
+    total_steps: int
+    total_steps_capped: bool
 
 
 class RunRequest(BaseModel):
     limit: Optional[int] = Field(default=None, ge=1)
+    ignore_breakpoints: bool = False
 
 
 class BreakpointRequest(BaseModel):
@@ -142,6 +163,8 @@ def create_app(
             history_size=len(session.history),
             breakpoints=session.list_breakpoints(),
             hit_breakpoint=session.hit_breakpoint,
+            total_steps=record.total_steps,
+            total_steps_capped=record.total_steps_capped,
         )
 
     def _serialize_states(states: List[ExecutionState]) -> List[SessionState]:
@@ -165,14 +188,22 @@ def create_app(
                     detail=str(exc),
                 ) from exc
 
+        input_bytes = _string_to_input_bytes(payload.input)
+        total_steps, total_steps_capped = _calculate_total_steps(
+            brainfuck_code,
+            input_bytes,
+        )
+
         record: SessionRecord = session_store.create_session(
             code=brainfuck_code,
-            input_template=_string_to_input_bytes(payload.input),
+            input_template=input_bytes,
             tape_window=payload.tape_window,
             max_steps=payload.max_steps,
             history_limit=payload.history_limit,
             source=original_source,
             language=language,
+            total_steps=total_steps,
+            total_steps_capped=total_steps_capped,
         )
         return _build_payload(record)
 
@@ -218,6 +249,8 @@ def create_app(
             history_size=len(session.history),
             breakpoints=session.list_breakpoints(),
             hit_breakpoint=session.hit_breakpoint,
+            total_steps=record.total_steps,
+            total_steps_capped=record.total_steps_capped,
         )
 
     @app.post("/api/session/{session_id}/run", response_model=StepResponse)
@@ -228,6 +261,12 @@ def create_app(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
         session = record.session
+        original_breakpoints: Optional[set[int]] = None
+        if payload.ignore_breakpoints:
+            original_breakpoints = set(session.breakpoints)
+            session.clear_breakpoints()
+            session.hit_breakpoint = None
+
         try:
             states = list(session.run_until_break(payload.limit))
         except StepLimitExceeded as exc:
@@ -235,6 +274,10 @@ def create_app(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=str(exc),
             ) from exc
+        finally:
+            if payload.ignore_breakpoints and original_breakpoints is not None:
+                session.breakpoints = set(original_breakpoints)
+                session.hit_breakpoint = None
 
         return StepResponse(
             session_id=record.session_id,
@@ -246,6 +289,8 @@ def create_app(
             history_size=len(session.history),
             breakpoints=session.list_breakpoints(),
             hit_breakpoint=session.hit_breakpoint,
+            total_steps=record.total_steps,
+            total_steps_capped=record.total_steps_capped,
         )
 
     @app.post("/api/session/{session_id}/breakpoints", response_model=SessionPayload)

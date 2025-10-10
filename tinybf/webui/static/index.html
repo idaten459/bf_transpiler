@@ -51,6 +51,7 @@
         <div class="button-row">
           <button id="create-session" class="primary">Create Session</button>
           <button id="step" class="accent">Step</button>
+          <button id="run" class="accent">Run</button>
           <button id="reset">Reset</button>
         </div>
         <p id="status" class="status">Ready.</p>
@@ -92,34 +93,40 @@
           </div>
           <pre id="code-window"></pre>
         </div>
+        <div class="panel-subheader breakpoint-header">
+          <h3>Breakpoints</h3>
+          <span class="breakpoint-hint">Click code window cells to toggle</span>
+        </div>
+        <div class="breakpoint-controls">
+          <button id="run-to-break" class="accent" type="button">Run to Breakpoint</button>
+        </div>
+        <div id="breakpoint-list" class="breakpoint-list"></div>
       </section>
 
       <section class="panel">
         <div class="panel-header">
-          <h2>Tape View</h2>
+          <h2>Execution Timeline</h2>
         </div>
-        <div id="tape" class="tape"></div>
         <div class="panel-subheader">
           <h3>History</h3>
         </div>
         <div class="history-controls">
-          <input id="history-range" class="history-range" type="range" min="0" max="0" value="0" />
+          <div class="history-actions">
+            <button id="history-first" type="button" aria-label="First step">⏮</button>
+            <button id="history-prev" type="button" aria-label="Previous step">◀</button>
+            <button id="history-next" type="button" aria-label="Next step">▶</button>
+            <button id="history-last" type="button" aria-label="Latest step">⏭</button>
+          </div>
+          <div class="history-range-container">
+            <input id="history-range" class="history-range" type="range" min="0" max="0" value="0" />
+          </div>
           <div id="history-info" class="history-info">Step 0 / 0</div>
+          <div id="history-chips" class="history-chips"></div>
         </div>
         <div class="panel-subheader">
-          <h3>Breakpoints</h3>
+          <h3>Tape View</h3>
         </div>
-        <div class="breakpoint-controls">
-          <label class="field breakpoint-input">
-            <span class="field-label">Program Counter</span>
-            <input id="breakpoint-pc" type="number" min="0" value="0" />
-          </label>
-          <div class="breakpoint-buttons">
-            <button id="add-breakpoint">Add Breakpoint</button>
-            <button id="run-to-break" class="accent">Run to Breakpoint</button>
-          </div>
-        </div>
-        <div id="breakpoint-list" class="breakpoint-list"></div>
+        <div id="tape" class="tape"></div>
       </section>
     </main>
 

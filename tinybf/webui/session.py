@@ -14,6 +14,8 @@ class SessionRecord:
     session: VisualizerSession
     language: str
     original_source: Optional[str] = None
+    total_steps: int = 0
+    total_steps_capped: bool = False
 
 
 class SessionStore:
@@ -33,6 +35,8 @@ class SessionStore:
         history_limit: int = 200,
         source: Optional[str] = None,
         language: str = "brainfuck",
+        total_steps: int = 0,
+        total_steps_capped: bool = False,
     ) -> SessionRecord:
         session = VisualizerSession(
             code=code,
@@ -48,6 +52,8 @@ class SessionStore:
             session=session,
             language=language,
             original_source=source,
+            total_steps=total_steps,
+            total_steps_capped=total_steps_capped,
         )
         with self._lock:
             self._sessions[session_id] = record
@@ -65,6 +71,7 @@ class SessionStore:
         session = record.session
         session.history.clear()
         session.hit_breakpoint = None
+        session.clear_breakpoints()
         session.restart()
         return record
 

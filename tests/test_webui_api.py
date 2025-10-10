@@ -27,6 +27,8 @@ class WebUISessionApiTests(unittest.TestCase):
         self.assertEqual(data["state"]["step"], 0)
         self.assertEqual(data["history"][0]["pc"], 0)
         self.assertFalse(data["finished"])
+        self.assertIn("total_steps", data)
+        self.assertIn("total_steps_capped", data)
 
     def test_step_advances_state(self) -> None:
         data = self._create_session(code="++.")
@@ -43,6 +45,7 @@ class WebUISessionApiTests(unittest.TestCase):
         self.assertEqual(len(payload["history"]), payload["history_size"])
         self.assertEqual(payload["history"][-1]["step"], payload["states"][-1]["step"])
         self.assertFalse(payload["finished"])
+        self.assertIn("total_steps", payload)
 
     def test_reset_restores_initial_state(self) -> None:
         data = self._create_session(code="+.")
@@ -55,6 +58,18 @@ class WebUISessionApiTests(unittest.TestCase):
         self.assertEqual(reset_payload["state"]["step"], 0)
         self.assertEqual(len(reset_payload["history"]), 1)
         self.assertFalse(reset_payload["finished"])
+
+    def test_reset_clears_breakpoints(self) -> None:
+        data = self._create_session(code="+++")
+        session_id = data["session_id"]
+
+        add = self.client.post(f"/api/session/{session_id}/breakpoints", json={"pc": 1})
+        self.assertEqual(add.status_code, 200, add.text)
+
+        reset = self.client.post(f"/api/session/{session_id}/reset")
+        self.assertEqual(reset.status_code, 200, reset.text)
+        payload = reset.json()
+        self.assertEqual(payload["breakpoints"], [])
 
     def test_step_limit_conflict(self) -> None:
         data = self._create_session(code="++", max_steps=1)
@@ -99,6 +114,19 @@ class WebUISessionApiTests(unittest.TestCase):
         self.assertEqual(payload["hit_breakpoint"], 1)
         self.assertFalse(payload["finished"])
 
+    def test_run_to_completion_ignore_breakpoints(self) -> None:
+        data = self._create_session(code="+.+")
+        session_id = data["session_id"]
+
+        response = self.client.post(
+            f"/api/session/{session_id}/run",
+            json={"limit": 10000, "ignore_breakpoints": True},
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertTrue(payload["finished"])
+        self.assertGreaterEqual(payload["total_steps"], payload["history"][-1]["step"])
+
     def test_create_session_transpiles_tinybf(self) -> None:
         source = "let char ch = 'A'\nprint_char ch\n"
         expected = BrainfuckTranspiler().transpile(source)
@@ -124,7 +152,7 @@ class WebUISessionApiTests(unittest.TestCase):
     def test_serves_static_asset(self) -> None:
         response = self.client.get("/static/main.js")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("runToBreakpoint", response.text)
+        self.assertIn("runSessionToEnd", response.text)
 
 
 if __name__ == "__main__":
