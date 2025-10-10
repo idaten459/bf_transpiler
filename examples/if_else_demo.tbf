@@ -1,0 +1,53 @@
+# TinyBF デモ: if / else による条件分岐
+# 入力された 1 文字が '0' なら "Zero"、それ以外なら "Non-zero" を表示します。
+
+let char input = '\0'
+let char newline = '\n'
+let char ch = 'N'
+let char digit_zero = '0'
+let num diff = 0
+let num is_zero = 1
+
+# 文字を 1 つ読み込む
+input_char input
+
+# 入力が '0' と異なるかどうかを差分で判定
+set diff = input
+sub diff digit_zero
+
+if diff {
+    set is_zero = 0
+}
+
+if is_zero {
+    # diff が 0 なら '0'
+    set ch = 'Z'
+    print_char ch
+    set ch = 'e'
+    print_char ch
+    set ch = 'r'
+    print_char ch
+    set ch = 'o'
+    print_char ch
+}
+else {
+    # diff が 0 以外なら '0' ではない
+    set ch = 'N'
+    print_char ch
+    set ch = 'o'
+    print_char ch
+    set ch = 'n'
+    print_char ch
+    set ch = '-'
+    print_char ch
+    set ch = 'z'
+    print_char ch
+    set ch = 'e'
+    print_char ch
+    set ch = 'r'
+    print_char ch
+    set ch = 'o'
+    print_char ch
+}
+
+print_char newline

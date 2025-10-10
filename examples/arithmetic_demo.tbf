@@ -1,0 +1,53 @@
+# TinyBF デモ: mul / div を使った簡単な算術の例
+
+let char space = 32  # スペース
+let char newline = '\n'
+let char symbol = '='
+let num multiplicand = 12
+let num multiplier = 3
+let num product = 0
+let num quotient = 0
+
+# 乗算
+set product = multiplicand
+mul product multiplier
+
+# 除算（0 除算対策として multiplier は 0 以外）
+set quotient = multiplicand
+div quotient multiplier
+
+# 表示 "12 * 3 = 36"
+print_dec multiplicand
+print_char space
+
+set symbol = '*'
+print_char symbol
+print_char space
+
+print_dec multiplier
+print_char space
+
+set symbol = '='
+print_char symbol
+print_char space
+
+print_dec product
+print_char newline
+
+# 表示 "12 / 3 = 4"
+print_dec multiplicand
+print_char space
+
+set symbol = '/'
+print_char symbol
+print_char space
+
+print_dec multiplier
+print_char space
+
+set symbol = '='
+print_char symbol
+print_char space
+
+print_dec quotient
+print_char newline

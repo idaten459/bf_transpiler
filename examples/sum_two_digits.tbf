@@ -1,16 +1,16 @@
-# TinyBF 競技プログラミング例: 1 桁の整数 A, B (0-4) を入力し A+B を出力
-# 入力形式: "A\nB\n" (それぞれ ASCII 数字と改行)
-# 出力形式: (A+B) を 1 桁の ASCII 数字で出力し、改行を付与
+# TinyBF デモ: 1 桁の整数 A, B (0-9) を入力し A+B を計算
+# 入力形式: "A\nB\n" （それぞれ ASCII 数字と改行）
+# 出力形式: "A+B=結果" の一行を出力します。
 
 let char ascii_zero = '0'
-let char newline = '\\n'
-let char temp = '\\0'
+let char newline = '\n'
+let char temp = '\0'
+let char digit = '0'
 let num a = 0
 let num b = 0
 let num sum = 0
-let char result = '\\0'
 
-# 1つ目の数字を読み取って 0-9 の値に変換
+# 1 つ目の数字を受け取り、0-9 に正規化
 input_char temp
 set a = temp
 sub a ascii_zero
@@ -18,19 +18,35 @@ sub a ascii_zero
 # 改行を読み捨て
 input_char temp
 
-# 2つ目の数字を読み取って 0-9 の値に変換
+# 2 つ目の数字を受け取り、0-9 に正規化
 input_char temp
 set b = temp
 sub b ascii_zero
 
-# 合計を計算 (A+B)
+# 合計を計算
 set sum = a
 add sum b
 
-# ASCII 数字に戻して出力
-set result = sum
-add result ascii_zero
-print_char result
+# 出力: A
+set digit = ascii_zero
+add digit a
+print_char digit
 
-# 改行を付与
+# 出力: +
+set digit = '+'
+print_char digit
+
+# 出力: B
+set digit = ascii_zero
+add digit b
+print_char digit
+
+# 出力: =
+set digit = '='
+print_char digit
+
+# 合計値を 10 進表記で表示
+print_dec sum
+
+# 改行
 print_char newline

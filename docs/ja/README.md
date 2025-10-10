@@ -82,6 +82,18 @@ python -m tinybf path/to/program.tbf --run --input "abc"  # 標準入力へ文�
 
 `--emit` が指定されない場合は Brainfuck コードを標準出力に出力します。`--run` を付けると内部のインタープリタで即時実行し、プログラムの出力を標準出力に書き込みます。
 
+## サンプルプログラム
+
+`examples/` ディレクトリには TinyBF の構文や標準的なワークフローを体験できる簡易デモが揃っています。CLI から直接実行する際は `--run` を指定します。
+
+- `hello_world.tbf` : 1 つの変数を使って "Hello, TinyBF!" を表示する最小例。
+- `sum_two_digits.tbf` : 1 桁の整数 2 つを読み取り、`print_dec` で合計を表示します。
+- `counting_loop.tbf` : `for` ループで 0〜4 を順に出力する制御構造の例。
+- `if_else_demo.tbf` : `if / else` による条件分岐で入力値を分類するサンプル。
+- `arithmetic_demo.tbf` : `mul` / `div` を利用した乗算と除算の出力例。
+
+例: `python -m tinybf examples/hello_world.tbf --run`
+
 ## ビジュアライザ
 Brainfuck の状態を 1 ステップずつ確認したい場合は、ビジュアライザを利用できます。
 

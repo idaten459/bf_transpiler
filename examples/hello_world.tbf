@@ -1,0 +1,45 @@
+# TinyBF デモ: 文字の出力
+# 1 つの変数を使って "Hello, TinyBF!" を表示します。
+
+let char ch = 'H'
+print_char ch
+
+set ch = 'e'
+print_char ch
+
+set ch = 'l'
+print_char ch
+print_char ch  # 2 回連続で使用
+
+set ch = 'o'
+print_char ch
+
+set ch = ','
+print_char ch
+
+set ch = 32  # スペース
+print_char ch
+
+set ch = 'T'
+print_char ch
+
+set ch = 'i'
+print_char ch
+
+set ch = 'n'
+print_char ch
+
+set ch = 'y'
+print_char ch
+
+set ch = 'B'
+print_char ch
+
+set ch = 'F'
+print_char ch
+
+set ch = '!'
+print_char ch
+
+set ch = '\n'
+print_char ch
