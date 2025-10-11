@@ -41,6 +41,7 @@ htmlcov/
 .idea/
 *.swp
 *.swo
+node_modules/
 
 # OS artifacts
 .DS_Store
