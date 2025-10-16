@@ -12,123 +12,124 @@
       <p class="tagline">Manual stepping and quick inspection for Brainfuck programs</p>
     </header>
 
-    <main class="layout">
-      <section class="panel">
-        <div class="panel-header">
-          <h2>Program</h2>
-        </div>
-        <label class="field">
-          <span class="field-label">TinyBF / Brainfuck Code</span>
-          <textarea id="code" rows="10">
-++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.
-          </textarea>
-        </label>
-        <div class="field">
-          <span class="field-label">Language</span>
-          <select id="language">
-            <option value="brainfuck">Brainfuck</option>
-            <option value="tinybf">TinyBF</option>
-          </select>
-        </div>
-        <label class="field" id="compiled-wrapper" hidden>
-          <span class="field-label">Compiled Brainfuck</span>
-          <textarea id="compiled-code" rows="6" readonly></textarea>
-        </label>
-        <div class="field-group">
+    <div id="app">
+      <main class="layout">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Program</h2>
+          </div>
           <label class="field">
-            <span class="field-label">Input</span>
-            <input id="input" type="text" placeholder="Optional input" />
+            <span class="field-label">TinyBF / Brainfuck Code</span>
+            <textarea id="code" rows="10">++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.
+</textarea>
           </label>
-          <label class="field">
-            <span class="field-label">Tape Window</span>
-            <input id="tape-window" type="number" min="1" value="10" />
+          <div class="field">
+            <span class="field-label">Language</span>
+            <select id="language">
+              <option value="brainfuck">Brainfuck</option>
+              <option value="tinybf">TinyBF</option>
+            </select>
+          </div>
+          <label class="field" id="compiled-wrapper" hidden>
+            <span class="field-label">Compiled Brainfuck</span>
+            <textarea id="compiled-code" rows="6" readonly></textarea>
           </label>
-          <label class="field">
-            <span class="field-label">Step Count</span>
-            <input id="step-count" type="number" min="1" value="1" />
-          </label>
-        </div>
-        <div class="button-row">
-          <button id="create-session" class="primary">Create Session</button>
-          <button id="step" class="accent">Step</button>
-          <button id="run" class="accent">Run</button>
-          <button id="reset">Reset</button>
-        </div>
-        <p id="status" class="status">Ready.</p>
-      </section>
+          <div class="field-group">
+            <label class="field">
+              <span class="field-label">Input</span>
+              <input id="input" type="text" placeholder="Optional input" />
+            </label>
+            <label class="field">
+              <span class="field-label">Tape Window</span>
+              <input id="tape-window" type="number" min="1" value="10" />
+            </label>
+            <label class="field">
+              <span class="field-label">Step Count</span>
+              <input id="step-count" type="number" min="1" value="1" />
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="create-session" class="primary">Create Session</button>
+            <button id="step" class="accent">Step</button>
+            <button id="run" class="accent">Run</button>
+            <button id="reset">Reset</button>
+          </div>
+          <p id="status" class="status">Ready.</p>
+        </section>
 
-      <section class="panel">
-        <div class="panel-header">
-          <h2>Execution State</h2>
-        </div>
-        <dl class="state-grid">
-          <div>
-            <dt>Step</dt>
-            <dd id="state-step">-</dd>
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Execution State</h2>
           </div>
-          <div>
-            <dt>Program Counter</dt>
-            <dd id="state-pc">-</dd>
+          <dl class="state-grid">
+            <div>
+              <dt>Step</dt>
+              <dd id="state-step">-</dd>
+            </div>
+            <div>
+              <dt>Program Counter</dt>
+              <dd id="state-pc">-</dd>
+            </div>
+            <div>
+              <dt>Command</dt>
+              <dd id="state-command">-</dd>
+            </div>
+            <div>
+              <dt>Pointer</dt>
+              <dd id="state-pointer">-</dd>
+            </div>
+            <div>
+              <dt>Output</dt>
+              <dd id="state-output">(empty)</dd>
+            </div>
+            <div>
+              <dt>Finished</dt>
+              <dd id="state-finished">No</dd>
+            </div>
+          </dl>
+          <div class="code-preview">
+            <div class="panel-subheader">
+              <h3>Code Window</h3>
+            </div>
+            <pre id="code-window"></pre>
           </div>
-          <div>
-            <dt>Command</dt>
-            <dd id="state-command">-</dd>
+          <div class="panel-subheader breakpoint-header">
+            <h3>Breakpoints</h3>
+            <span class="breakpoint-hint">Click code window cells to toggle</span>
           </div>
-          <div>
-            <dt>Pointer</dt>
-            <dd id="state-pointer">-</dd>
+          <div class="breakpoint-controls">
+            <button id="run-to-break" class="accent" type="button">Run to Breakpoint</button>
           </div>
-          <div>
-            <dt>Output</dt>
-            <dd id="state-output">(empty)</dd>
+          <div id="breakpoint-list" class="breakpoint-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Execution Timeline</h2>
           </div>
-          <div>
-            <dt>Finished</dt>
-            <dd id="state-finished">No</dd>
-          </div>
-        </dl>
-        <div class="code-preview">
           <div class="panel-subheader">
-            <h3>Code Window</h3>
+            <h3>History</h3>
           </div>
-          <pre id="code-window"></pre>
-        </div>
-        <div class="panel-subheader breakpoint-header">
-          <h3>Breakpoints</h3>
-          <span class="breakpoint-hint">Click code window cells to toggle</span>
-        </div>
-        <div class="breakpoint-controls">
-          <button id="run-to-break" class="accent" type="button">Run to Breakpoint</button>
-        </div>
-        <div id="breakpoint-list" class="breakpoint-list"></div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-header">
-          <h2>Execution Timeline</h2>
-        </div>
-        <div class="panel-subheader">
-          <h3>History</h3>
-        </div>
-        <div class="history-controls">
-          <div class="history-actions">
-            <button id="history-first" type="button" aria-label="First step">⏮</button>
-            <button id="history-prev" type="button" aria-label="Previous step">◀</button>
-            <button id="history-next" type="button" aria-label="Next step">▶</button>
-            <button id="history-last" type="button" aria-label="Latest step">⏭</button>
+          <div class="history-controls">
+            <div class="history-actions">
+              <button id="history-first" type="button" aria-label="First step">⏮</button>
+              <button id="history-prev" type="button" aria-label="Previous step">◀</button>
+              <button id="history-next" type="button" aria-label="Next step">▶</button>
+              <button id="history-last" type="button" aria-label="Latest step">⏭</button>
+            </div>
+            <div class="history-range-container">
+              <input id="history-range" class="history-range" type="range" min="0" max="0" value="0" />
+            </div>
+            <div id="history-info" class="history-info">Step 0 / 0</div>
+            <div id="history-chips" class="history-chips"></div>
           </div>
-          <div class="history-range-container">
-            <input id="history-range" class="history-range" type="range" min="0" max="0" value="0" />
+          <div class="panel-subheader">
+            <h3>Tape View</h3>
           </div>
-          <div id="history-info" class="history-info">Step 0 / 0</div>
-          <div id="history-chips" class="history-chips"></div>
-        </div>
-        <div class="panel-subheader">
-          <h3>Tape View</h3>
-        </div>
-        <div id="tape" class="tape"></div>
-      </section>
-    </main>
+          <div id="tape" class="tape"></div>
+        </section>
+      </main>
+    </div>
 
     <script type="module" src="/static/dist/main.js" defer></script>
   </body>
