@@ -9,7 +9,7 @@
     "test": "tests"
   },
   "scripts": {
-    "build:web": "tsc -p tinybf/webui/static/tsconfig.json && esbuild tinybf/webui/static/src/index.ts --bundle --outfile=tinybf/webui/static/dist/main.js --format=esm --target=es2019 --sourcemap --tsconfig=tinybf/webui/static/tsconfig.json",
+    "build:web": "tsc -p tinybf/webui/static/tsconfig.json && esbuild tinybf/webui/static/src/main.ts --bundle --outfile=tinybf/webui/static/dist/main.js --format=esm --target=es2019 --sourcemap --tsconfig=tinybf/webui/static/tsconfig.json --alias:vue=vue/dist/vue.esm-bundler.js --define:__VUE_OPTIONS_API__=true --define:__VUE_PROD_DEVTOOLS__=false --define:__VUE_PROD_HYDRATION_MISMATCH_DETAILS__=false",
     "pretest:js": "npm run build:web",
     "test": "npm run test:js",
     "test:js": "mocha \"js-tests/**/*.spec.js\""
@@ -25,5 +25,9 @@
     "jsdom": "^19.0.0",
     "mocha": "^9.2.2",
     "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21"
   }
 }
