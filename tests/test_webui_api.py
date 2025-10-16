@@ -150,7 +150,7 @@ class WebUISessionApiTests(unittest.TestCase):
         self.assertIn("TinyBF Web UI", response.text)
 
     def test_serves_static_asset(self) -> None:
-        response = self.client.get("/static/main.js")
+        response = self.client.get("/static/dist/main.js")
         self.assertEqual(response.status_code, 200)
         self.assertIn("runSessionToEnd", response.text)
 

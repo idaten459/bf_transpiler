@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "esModuleInterop": false,
+    "lib": ["DOM", "DOM.Iterable", "ES2019"],
+    "noEmit": true
+  },
+  "include": ["src"]
+}

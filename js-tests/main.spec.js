@@ -7,14 +7,14 @@ const transformNullish = require('@babel/plugin-proposal-nullish-coalescing-oper
 
 const projectRoot = path.resolve(__dirname, '..');
 const htmlPath = path.join(projectRoot, 'tinybf/webui/static/index.html');
-const scriptPath = path.join(projectRoot, 'tinybf/webui/static/main.js');
+const scriptPath = path.join(projectRoot, 'tinybf/webui/static/dist/main.js');
 
 function hasOwn(object, key) {
   return Object.prototype.hasOwnProperty.call(object, key);
 }
 
 function sanitizeHtml(html) {
-  return html.replace(/<script[^>]*src="\/static\/main\.js"[^>]*><\/script>/, '');
+  return html.replace(/<script[^>]*src="\/static\/dist\/main\.js"[^>]*><\/script>/, '');
 }
 
 function deepClone(value) {
