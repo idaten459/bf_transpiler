@@ -11,6 +11,10 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+# Keep bundled assets under TinyBF webui static directory
+!tinybf/webui/static/dist/
+!tinybf/webui/static/dist/*.js
+!tinybf/webui/static/dist/*.js.map
 downloads/
 eggs/
 .eggs/
